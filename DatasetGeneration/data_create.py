@@ -12,22 +12,40 @@ class DataCreate:
         self.folder_name = None
         self.dataset = []
 
-    def process_file(self, file_name):
+    def process_file(self, file_name) -> dict:
+        """
+        Process the file and return the text and confidence score of the file as a dictionary object
+        :param file_name: Name of the file
+        :return: Dictionary object with text and confidence score
+        """
         text, confidence = self.data_extract.speech_to_text(file_name)
         return {"text": text, "confidence": confidence}
 
-    def save_dataset_to_csv(self):
+    def save_dataset_to_csv(self) -> None:
+        """
+        Save the dataset to a csv file
+        :return: None
+        """
         df = pd.DataFrame(self.dataset, columns=["text", "confidence"])
         csv_filename = f"Dataset/result/{self.folder_name}.csv"
         df.to_csv(csv_filename, index=False)
 
-    def create_and_save_chunk(self, chunk_paths):
+    def create_and_save_chunk(self, chunk_paths) -> None:
+        """
+        Create a chunk of the dataset and save it to a csv file
+        :param chunk_paths: List of paths of the files in the chunk
+        :return: None
+        """
         chunk_data_bag = db.from_sequence(chunk_paths)
         chunk_processed_data_bag = chunk_data_bag.map(self.process_file)
         chunk_processed_data_list = chunk_processed_data_bag.compute()
         self.dataset.extend(chunk_processed_data_list)
 
-    def create_dataset(self):
+    def create_dataset(self) -> None:
+        """
+        Create the dataset and save it to a csv file
+        :return: None
+        """
         audio_files = [
             f for f in os.listdir(self.file_path) if not f.startswith(".DS_Store")
         ]
