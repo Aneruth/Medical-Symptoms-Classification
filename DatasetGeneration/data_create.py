@@ -4,18 +4,19 @@ from google.cloud import speech
 
 
 class DataCreate:
-
     def fetch_audio(self, file_path: str):
         """
         Fetches the audio from the file path
         :return: audio object from the file path
         """
         stereo_audio = AudioSegment.from_file(file_path)
-        mono_audio = stereo_audio.set_channels(1)  # Convert to mono audio since stereo audio is not supported
+        mono_audio = stereo_audio.set_channels(
+            1
+        )  # Convert to mono audio since stereo audio is not supported
         return mono_audio.raw_data
 
     def speech_to_text(self, audio_data):
-        """ 
+        """
         Performs synchronous speech recognition on an audio file
         :param audio_data: The audio data to transcribe as bytes.
         """
@@ -31,10 +32,7 @@ class DataCreate:
 
         audio = speech.RecognitionAudio(content=audio_data)
 
-        resp = {
-            "audio": audio,
-            "config": config
-        }
+        resp = {"audio": audio, "config": config}
 
         text, confidence = "", 0
 
@@ -48,9 +46,9 @@ class DataCreate:
 
 
 # if __name__ == "__main__":
-    # data_create = DataCreate()
+# data_create = DataCreate()
 
-    # # Fetch the audio from the file path
-    # audio = data_create.fetch_audio(file_path="Dataset/test/1249120_1853182_11719913.wav")
-    # data = data_create.speech_to_text(audio_data=audio)
-    # print(data)
+# # Fetch the audio from the file path
+# audio = data_create.fetch_audio(file_path="Dataset/test/1249120_1853182_11719913.wav")
+# data = data_create.speech_to_text(audio_data=audio)
+# print(data)
