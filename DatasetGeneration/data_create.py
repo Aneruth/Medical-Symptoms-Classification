@@ -1,54 +1,38 @@
-# create a function that reads from the wav file and returns the text
-from pydub import AudioSegment
-from google.cloud import speech
+import os
+import pandas as pd
+from DatasetGeneration.data_extract import DataExtract
 
 
 class DataCreate:
-    def fetch_audio(self, file_path: str):
+    def __init__(self, file_path: str, batch_size: int):
+        self.data_extract = DataExtract()
+        self.file_path = file_path
+        self.batch_size = batch_size
+
+    def create_dataset(self) -> pd.DataFrame:
         """
-        Fetches the audio from the file path
-        :return: audio object from the file path
+        Creates the dataset from the file path provided
+        :return: dataset
         """
-        stereo_audio = AudioSegment.from_file(file_path)
-        mono_audio = stereo_audio.set_channels(
-            1
-        )  # Convert to mono audio since stereo audio is not supported
-        return mono_audio.raw_data
+        # list all audio files
+        audio_files = list(
+            filter(lambda f: not f.startswith(".DS_Store"), os.listdir(self.file_path))
+        )
+        print("Total audio files: ", len(audio_files))
 
-    def speech_to_text(self, audio_data):
-        """
-        Performs synchronous speech recognition on an audio file
-        :param audio_data: The audio data to transcribe as bytes.
-        """
-        # Configure the speech recognition request
-        config = {
-            "language_code": "en-US",  # Language code for English (US)
-            "sample_rate_hertz": 44100,  # Sample rate of our audio file which is set to 44.1 kHz
-            "encoding": speech.RecognitionConfig.AudioEncoding.LINEAR16,
-        }
+        def concatenate_paths(file_name):
+            return os.path.join(self.file_path, file_name)
 
-        # Perform the transcription request
-        client = speech.SpeechClient()
+        concatenated_paths = list(map(concatenate_paths, audio_files))
+        print("Concatenated paths: ", concatenated_paths)
 
-        audio = speech.RecognitionAudio(content=audio_data)
-
-        resp = {"audio": audio, "config": config}
-
-        text, confidence = "", 0
-
-        response = client.recognize(request=resp)
-        for result in response.results:
-            best_alternative = result.alternatives[0]
-            text = best_alternative.transcript
-            confidence = round(best_alternative.confidence * 100, 2)
-
-        return (text, confidence)
+        # list all files from the concatenated paths
+        # TODO: Implement this using dask bag and create a dataframe for
+        # train, test and validation
 
 
-# if __name__ == "__main__":
-# data_create = DataCreate()
-
-# # Fetch the audio from the file path
-# audio = data_create.fetch_audio(file_path="Dataset/test/1249120_1853182_11719913.wav")
-# data = data_create.speech_to_text(audio_data=audio)
-# print(data)
+if __name__ == "__main__":
+    file_path = "Dataset"
+    batch_size = 500
+    data_create = DataCreate(file_path, batch_size)
+    data_create.create_dataset()
