@@ -1,0 +1,13 @@
+spacy
+ipykernel
+pandas
+numpy
+matplotlib
+seaborn
+black
+flake8
+scipy
+statsmodels
+nltk
+SpeechRecognition
+pytextrank
