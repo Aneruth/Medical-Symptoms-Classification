@@ -1,0 +1,5 @@
+-   id: exclude-virtualenv-files
+    name: Exclude virtualenv files
+    entry: find . -type f -path './venv/*' -prune -o -name '*.py' -print
+    language: system
+    types: [python]

@@ -13,3 +13,4 @@ google-cloud-speech
 ipython
 pytextrank
 pydub
+pre-commit
