@@ -3,7 +3,7 @@ repos:
     rev: stable
     hooks:
     -   id: black
-        exclude: '\venv'
+        exclude: '\.venv'
 
 -   repo: https://github.com/pre-commit/mirrors-autopep8
     rev: v1.5.7
