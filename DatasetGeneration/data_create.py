@@ -10,65 +10,54 @@ class DataCreate:
         self.data_extract = DataExtract()
         self.file_path = file_path
         self.folder_name = None
-
-    def concatenate_paths(self, file_name):
-        return os.path.join(self.file_path, file_name)
+        self.dataset = []
 
     def process_file(self, file_name):
-        # Process the audio file and extract text and confidence using self.data_extract
         text, confidence = self.data_extract.speech_to_text(file_name)
         return {"text": text, "confidence": confidence}
 
-    def create_dataset(self) -> list:
-        """
-        Creates the dataset from the file path provided
-        :param folder_name: Name of the folder (train, test, validate)
-        :return: dataset
-        """
-        dataset = []
+    def save_dataset_to_csv(self):
+        df = pd.DataFrame(self.dataset, columns=["text", "confidence"])
+        csv_filename = f"Dataset/result/{self.folder_name}.csv"
+        df.to_csv(csv_filename, index=False)
 
-        # List all audio files
-        audio_files = list(
-            filter(lambda f: not f.startswith(".DS_Store"), os.listdir(self.file_path))
-        )
+    def create_and_save_chunk(self, chunk_paths):
+        chunk_data_bag = db.from_sequence(chunk_paths)
+        chunk_processed_data_bag = chunk_data_bag.map(self.process_file)
+        chunk_processed_data_list = chunk_processed_data_bag.compute()
+        self.dataset.extend(chunk_processed_data_list)
 
-        concatenated_paths = list(map(self.concatenate_paths, audio_files))
+    def create_dataset(self):
+        audio_files = [
+            f for f in os.listdir(self.file_path) if not f.startswith(".DS_Store")
+        ]
 
-        # Use Dask Bag to process the audio files concurrently
-        bag = db.from_sequence(concatenated_paths)
-        processed_data_bag = bag.map(self.process_file)
-
-        # list all files from the bag
-
-        # Combine the processed data into a single list
-        processed_data_list = processed_data_bag.compute()
-
-        for data in processed_data_list:
-            dataset.append(data)
+        concatenated_paths = [os.path.join(self.file_path, f) for f in audio_files]
+        num_files = len(concatenated_paths)
+        chunk_size = 1500  # Adjust as needed
+        num_chunks = (num_files + chunk_size - 1) // chunk_size
 
         self.folder_name = self.file_path.split("/")[-1]
 
-        return dataset
+        for chunk_number in range(num_chunks):
+            start_idx = chunk_number * chunk_size
+            end_idx = min(start_idx + chunk_size, num_files)
+            chunk_paths = concatenated_paths[start_idx:end_idx]
 
-    def save_dataset(self, dataset: list):
-        # Save the dataset to CSV file
-        df = pd.DataFrame(dataset, columns=["text", "confidence"])
-        df.to_csv(
-            f"ResultData/{self.folder_name}.csv", index=False
-        )  # Check this where it saves
+            self.create_and_save_chunk(chunk_paths)
+
+        self.save_dataset_to_csv()
 
 
 if __name__ == "__main__":
-    file_path = os.listdir("Dataset")
+    dataset_folders = [
+        f for f in os.listdir("Dataset") if not f.startswith(".DS_Store")
+    ]
 
-    dataset_folders = list(filter(lambda f: not f.startswith(".DS_Store"), file_path))
+    ProgressBar().register()
 
-    for folders in dataset_folders:
-        file_path = os.path.join("Dataset", folders)
-
-        if file_path == "Dataset/validate":
+    for folder in dataset_folders:
+        file_path = os.path.join("Dataset", folder)
+        if file_path == "Dataset/train" and file_path != "Dataset/result":
             data_create = DataCreate(file_path)
-
-            with ProgressBar():
-                df = data_create.create_dataset()
-                data_create.save_dataset(df)
+            df = data_create.create_dataset()
