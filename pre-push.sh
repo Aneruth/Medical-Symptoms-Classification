@@ -1,10 +1,8 @@
 #!/bin/bash
 
-# Run Black for auto-formatting
-black .
-
-# Run Flake8 for linting
-flake8
+# Run Black and Flake8 only on modified Python files outside the virtual environment
+git diff --name-only --cached | grep '\.py$' | grep -v '/venv/' | xargs black
+git diff --name-only --cached | grep '\.py$' | grep -v '/venv/' | xargs flake8
 
 # Check if any errors occurred
 if [ $? -eq 0 ]; then
