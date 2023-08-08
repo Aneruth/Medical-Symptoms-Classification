@@ -9,5 +9,9 @@ flake8
 scipy
 statsmodels
 nltk
-SpeechRecognition
+google-cloud-speech
+ipython
 pytextrank
+pydub
+pre-commit
+dask
