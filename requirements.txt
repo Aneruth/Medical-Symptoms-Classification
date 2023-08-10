@@ -15,3 +15,4 @@ pytextrank
 pydub
 pre-commit
 dask
+scispacy

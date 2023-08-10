@@ -1,23 +1,15 @@
-import pandas as pd
 import nltk
 import os
 import string
+from helper import read_data
 
 
 class DataClean:
     def __init__(self, file_path: str):
         self.file_path = file_path
-        self.data = None
-        self.read_data()
+        self.data = read_data(self.file_path)
         nltk.download("stopwords")
         self.stopwords = nltk.corpus.stopwords.words("english")
-
-    def read_data(self) -> None:
-        """
-        Read the dataset from the csv file
-        :return: None
-        """
-        self.data = pd.read_csv(self.file_path)
 
     def remove_punctuation(self) -> None:
         """
